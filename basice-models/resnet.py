@@ -24,17 +24,17 @@ class BasicBlock(nn.Module):
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False), # default padding=0
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels * BasicBlock.expansion, kernel_size=3, pading=1, bias=False),
+            nn.Conv2d(out_channels, out_channels * BasicBlock.expansion, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels * BasicBlock.expansion)
         )
 
         # shortcut
         # 1x1卷积,跨层,stride=2,channel变化 不跨层，stride=1
         
-        if stride != 1 or in_channels != out_channels:
+        if stride != 1 or in_channels != out_channels * expansion:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(out_channels)
+                nn.Conv2d(in_channels, out_channels * expansion, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels * expansion)
             )
         else:
             self.shortcut = nn.Sequential()   # 当不跨层时，x直接连
@@ -68,7 +68,7 @@ class Bottleneck(nn.Module):
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),  
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, pading=1, bias=False),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels * expansion, kernel_size=1, padding=1, bias=False),
@@ -86,7 +86,7 @@ class Bottleneck(nn.Module):
         
         self.relu = nn.ReLU(inplace=True)
     
-    def forward(self, x):
+    def forward(self, x): 
         x = self.residual(x) + self.shortcut(x)
         x = self.relu(x)
         return x
