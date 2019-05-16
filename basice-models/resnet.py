@@ -29,7 +29,7 @@ class BasicBlock(nn.Module):
         )
 
         # shortcut
-        # 1x1卷积,跨层,stride=2,channel变化 不跨层，stride=1
+        # 1x1卷积,跨层,stride=2,channel变化 不跨层,stride=1
         
         if stride != 1 or in_channels != out_channels * expansion:
             self.shortcut = nn.Sequential(
@@ -59,7 +59,7 @@ class BasicBlock(nn.Module):
 '''
 class Bottleneck(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
-        super().__init__()
+        super(Bottleneck).__init__()
         expansion = 4
         # residual 
         # 1x1 + 3x3 + 1x1卷积
@@ -127,7 +127,7 @@ class ResNet(nn.Module):
                      1x1x512   128 x 4
         '''
         # 跨层连接 有可能stride=2
-        strides = [stride] + [1] * [layer_num - 1]
+        strides = [stride] + 1 * [layer_num - 1]
         layers = []
         for stride in strides:
             layers.append(block_type(self.in_channels, out_channels,stride))  # 一个residual block完成
@@ -176,3 +176,8 @@ def resnet152():
     """ return ResNet-152 
     """
     return ResNet(Bottleneck, [3, 8, 36, 3])
+
+
+if __name__ == "__main__":
+    model = resnet18()
+    print(model)
