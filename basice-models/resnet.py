@@ -14,10 +14,12 @@ import torch.nn as nn
     3x3,128
 '''
 class BasicBlock(nn.Module):
+    # 放外面
+    expansion = 1
     def __init__(self, in_channels, out_channels, stride=1):
-        super(BasicBlock, self).__init__()
+        super().__init__()
 
-        expansion = 1
+     
         # residual 
         # 3x3 + 3x3卷积 不跨层时feature map不变，所以stride=1,channel不变，跨层时feature map减半，stride=2，同时channel扩大两倍
         self.residual = nn.Sequential(
@@ -29,12 +31,12 @@ class BasicBlock(nn.Module):
         )
 
         # shortcut
-        # 1x1卷积,跨层,stride=2,channel变化 不跨层，stride=1
+        # 1x1卷积,跨层,stride=2,channel变化 不跨层,stride=1
         
-        if stride != 1 or in_channels != out_channels * expansion:
+        if stride != 1 or in_channels != out_channels * BasicBlock.expansion:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels * expansion, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(out_channels * expansion)
+                nn.Conv2d(in_channels, out_channels * BasicBlock.expansion, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels * BasicBlock.expansion)
             )
         else:
             self.shortcut = nn.Sequential()   # 当不跨层时，x直接连
@@ -58,9 +60,10 @@ class BasicBlock(nn.Module):
     1x1,512
 '''
 class Bottleneck(nn.Module):
+    expansion = 4
     def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
-        expansion = 4
+      
         # residual 
         # 1x1 + 3x3 + 1x1卷积
         # in_channels = out_channels, 所以输出是out_channels * 4  
@@ -71,15 +74,15 @@ class Bottleneck(nn.Module):
             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels * expansion, kernel_size=1, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels * expansion)
+            nn.Conv2d(out_channels, out_channels * Bottleneck.expansion, kernel_size=1, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels * Bottleneck.expansion)
         )
 
         # shortcut
-        if stride != 1 or in_channels != out_channels * 4:
+        if stride != 1 or in_channels != out_channels * Bottleneck.expansion:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels * 4, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(out_channels * 4)
+                nn.Conv2d(in_channels, out_channels * Bottleneck.expansion, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels * Bottleneck.expansion)
             )
         else:
             self.shortcut = nn.Sequential()   # 当不跨层时，x直接连
@@ -94,7 +97,7 @@ class Bottleneck(nn.Module):
   
 class ResNet(nn.Module):
     def __init__(self, block_type, layer_list, num_class=100):
-        super(ResNet,self).__init__()
+        super().__init__()
 
         # 输入channels
         self.in_channels = 64
@@ -126,8 +129,8 @@ class ResNet(nn.Module):
         3x3,128      3x3x128
                      1x1x512   128 x 4
         '''
-        # 跨层连接 有可能stride=2
-        strides = [stride] + [1] * [layer_num - 1]
+        # 跨层连接 有可能stride=2;形成[2,1,1,1,1,....]
+        strides = [stride] + [1] * (layer_num - 1)
         layers = []
         for stride in strides:
             layers.append(block_type(self.in_channels, out_channels,stride))  # 一个residual block完成
@@ -176,3 +179,8 @@ def resnet152():
     """ return ResNet-152 
     """
     return ResNet(Bottleneck, [3, 8, 36, 3])
+
+
+if __name__ == "__main__":
+    model = resnet50()
+    print(model)
